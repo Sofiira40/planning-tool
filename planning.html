@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Planning Phase – Get Ready-Do-Done Planner</title>
+  <style>
+    /* Base styling */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    .instructions {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .task-input-wrapper {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .task-input-wrapper input {
+      font-size: 16px;
+      padding: 10px;
+      width: 80%;
+    }
+    .grdd-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      table-layout: fixed;
+    }
+    .grdd-table th, .grdd-table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      vertical-align: top;
+      overflow-y: auto;
+      max-height: 500px;
+    }
+    @media (max-width: 768px) {
+      .grdd-table, .grdd-table tbody, .grdd-table tr, .grdd-table td, .grdd-table th {
+        display: block;
+        width: 100%;
+      }
+      .grdd-table td, .grdd-table th {
+        margin-bottom: 10px;
+      }
+    }
+    @media (min-width: 769px) {
+      .get-ready, .do, .done {
+        width: 33.33%;
+      }
+    }
+    .get-ready { background-color: #ffff99; }
+    .do { background-color: #90ee90; }
+    .done { background-color: #ff6961; }
+    input[type="text"], textarea {
+      padding: 8px;
+      margin-bottom: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100%;
+    }
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .checklist-item input[type="text"] {
+      flex: 1;
+    }
+    .add-btn, .continue-btn, .remove-btn {
+      cursor: pointer;
+    }
+    .add-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .remove-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 2px 5px;
+      border-radius: 4px;
+      margin-left: 5px;
+    }
+    .phase-navigation {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .continue-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    /* Placeholder style */
+    ::-webkit-input-placeholder { font-size: 11px; color: #666; }
+    ::-moz-placeholder { font-size: 11px; color: #666; }
+    :-ms-input-placeholder { font-size: 11px; color: #666; }
+    :-moz-placeholder { font-size: 11px; color: #666; }
+  </style>
+</head>
+<body>
+  <div class="container" id="planningContainer">
+    <div class="instructions">
+      <h1>Get Ready-Do-Done Planner</h1>
+      <p>We use backwards design:</p>
+      <ol>
+        <li><strong>Start with DONE</strong> – Define what success looks like and create success criteria.</li>
+        <li><strong>Then plan the DO steps</strong> – List the actions needed to reach your goal.</li>
+        <li><strong>Finally GET READY</strong> – Identify all the materials and supports you'll need.</li>
+      </ol>
+    </div>
+    <div class="task-input-wrapper">
+      <h3>Task:</h3>
+      <input type="text" id="task-input" placeholder="Enter your task or project here..." />
+    </div>
+    <table class="grdd-table">
+      <tr>
+        <th class="get-ready">Get Ready</th>
+        <th class="do">Do</th>
+        <th class="done">Done</th>
+      </tr>
+      <tr>
+        <!-- GET READY Column -->
+        <td class="get-ready">
+          <p><strong>Strategies:</strong></p>
+          <div id="strategies-list">
+            <div class="checklist-item">
+              <input type="checkbox">
+              <input type="text" placeholder="What supports/strategies do you need?">
+              <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+            </div>
+          </div>
+          <button type="button" class="add-btn" onclick="addItem('strategies-list')">+ Add Strategy</button>
+
+          <p><strong>Technology and Time:</strong></p>
+          <div id="tech-time-list">
+            <div class="checklist-item">
+              <input type="checkbox">
+              <input type="text" placeholder="What digital tools might I need? How much time should this task take?">
+              <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+            </div>
+          </div>
+          <button type="button" class="add-btn" onclick="addItem('tech-time-list')">+ Add Tech/Time</button>
+
+          <p><strong>Objects:</strong></p>
+          <div id="objects-list">
+            <div class="checklist-item">
+              <input type="checkbox">
+              <input type="text" placeholder="What materials do I need for this task?">
+              <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+            </div>
+          </div>
+          <button type="button" class="add-btn" onclick="addItem('objects-list')">+ Add Object</button>
+
+          <p><strong>People:</strong></p>
+          <div id="people-list">
+            <div class="checklist-item">
+              <input type="checkbox">
+              <input type="text" placeholder="Who can assist me if I get stuck?">
+              <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+            </div>
+          </div>
+          <button type="button" class="add-btn" onclick="addItem('people-list')">+ Add Person</button>
+        </td>
+
+        <!-- DO Column -->
+        <td class="do">
+          <p><strong>What steps do I need to complete?</strong></p>
+          <div id="steps-list">
+            <div class="step-item" data-time-estimate="0">
+              <div class="checklist-item">
+                <input type="checkbox">
+                <input type="text" placeholder="Steps to complete the task">
+                <input type="number" class="time-estimate" placeholder="Min" min="1" max="999">
+                <button type="button" class="remove-btn" onclick="this.parentElement.parentElement.remove()">✕</button>
+              </div>
+              <div class="substeps-container" style="margin-left: 25px; margin-top: 5px;"></div>
+              <button type="button" class="add-substep-btn" onclick="addSubstep(this)" style="margin-left: 25px; background-color: #6c757d; color: white; padding: 3px 8px; border-radius: 4px; margin-top: 5px; font-size: 12px;">+ Chunk this further</button>
+            </div>
+          </div>
+          <button type="button" class="add-btn" onclick="addMainStep()" style="margin-top: 20px;">+ Add Step</button>
+
+          <p><strong>Potential Time Robbers:</strong></p>
+          <ul id="time-robbers-list">
+            <li>
+              <input type="text" placeholder="What might distract me from my task?">
+              <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+            </li>
+          </ul>
+          <button type="button" class="add-btn" onclick="addBulletItem('time-robbers-list')">+ Add Time Robber</button>
+        </td>
+
+        <!-- DONE Column -->
+        <td class="done">
+          <p><strong>What does DONE look like?</strong></p>
+          <textarea id="done-description" placeholder="Describe what a completed task looks like..."></textarea>
+          <p><strong>Optionally, upload an image:</strong></p>
+          <input type="file" id="done-image" accept="image/*" onchange="handleDoneImage(this)">
+          <p><strong>Success Criteria:</strong></p>
+          <div id="success-criteria-list">
+            <div class="checklist-item">
+              <input type="checkbox">
+              <input type="text" placeholder="How do I know I'm done?">
+              <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+            </div>
+          </div>
+          <button type="button" class="add-btn" onclick="addItem('success-criteria-list')">+ Add Success Criteria</button>
+          <p><strong>Self-Monitoring Questions:</strong></p>
+          <div id="self-monitoring-list">
+            <div class="checklist-item">
+              <input type="checkbox">
+              <input type="text" placeholder="What went well? What could I do better?">
+              <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+            </div>
+          </div>
+          <button type="button" class="add-btn" onclick="addItem('self-monitoring-list')">+ Add Question</button>
+          <!-- Hidden field to store image data -->
+          <input type="hidden" id="done-image-data" value="">
+        </td>
+      </tr>
+    </table>
+
+    <div class="phase-navigation">
+      <button type="button" class="continue-btn" onclick="continueToActionPhase()">Continue to Action Phase →</button>
+    </div>
+  </div>
+
+  <script>
+    // Functions for adding/removing items
+    const placeholders = {
+      "strategies-list": "What supports/strategies do you need?",
+      "tech-time-list": "What digital tools might I need? How much time should this task take?",
+      "objects-list": "What materials do I need for this task?",
+      "people-list": "Who can assist me if I get stuck?",
+      "success-criteria-list": "How do I know I'm done?",
+      "self-monitoring-list": "What went well? What could I do better?"
+    };
+    const bulletPlaceholders = {
+      "time-robbers-list": "What might distract me from my task?"
+    };
+    const stepPlaceholder = "Steps to complete the task";
+    const substepPlaceholder = "Chunk this further";
+    const subsubstepPlaceholder = "Chunk this further";
+
+    function addItem(listId) {
+      const list = document.getElementById(listId);
+      const placeholder = placeholders[listId] || "Add item...";
+      const newItem = document.createElement("div");
+      newItem.className = "checklist-item";
+      newItem.innerHTML = `
+        <input type="checkbox" onchange="updateProgress()">
+        <input type="text" placeholder="${placeholder}">
+        <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+      `;
+      list.appendChild(newItem);
+    }
+    function addBulletItem(listId) {
+      const list = document.getElementById(listId);
+      const placeholder = bulletPlaceholders[listId] || "Add item...";
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <input type="text" placeholder="${placeholder}">
+        <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+      `;
+      list.appendChild(li);
+    }
+    function addMainStep() {
+      const stepsList = document.getElementById("steps-list");
+      const newStepItem = document.createElement("div");
+      newStepItem.className = "step-item";
+      newStepItem.dataset.timeEstimate = "0";
+      newStepItem.innerHTML = `
+        <div class="checklist-item">
+          <input type="checkbox">
+          <input type="text" placeholder="${stepPlaceholder}">
+          <input type="number" class="time-estimate" placeholder="Min" min="1" max="999">
+          <button type="button" class="remove-btn" onclick="this.parentElement.parentElement.remove()">✕</button>
+        </div>
+        <div class="substeps-container" style="margin-left: 25px; margin-top: 5px;"></div>
+        <button type="button" class="add-substep-btn" onclick="addSubstep(this)" style="margin-left: 25px; background-color: #6c757d; color: white; padding: 3px 8px; border-radius: 4px; margin-top: 5px; font-size: 12px;">+ Chunk this further</button>
+      `;
+      stepsList.appendChild(newStepItem);
+    }
+    function addSubstep(button) {
+      const stepItem = button.parentElement;
+      const substepsContainer = stepItem.querySelector(".substeps-container");
+      const newSubstep = document.createElement("div");
+      newSubstep.className = "substep-item";
+      newSubstep.innerHTML = `
+        <div class="checklist-item">
+          <input type="checkbox">
+          <input type="text" placeholder="${substepPlaceholder}">
+          <button type="button" class="remove-btn" onclick="this.parentElement.parentElement.remove()">✕</button>
+        </div>
+        <div class="subsubsteps-container" style="margin-left: 25px; margin-top: 5px;"></div>
+        <button type="button" class="add-subsubstep-btn" onclick="addSubsubstep(this)" style="margin-left: 25px; background-color: #6c757d; color: white; padding: 3px 8px; border-radius: 4px; margin-top: 5px; font-size: 12px;">+ Chunk this further</button>
+      `;
+      substepsContainer.appendChild(newSubstep);
+    }
+    function addSubsubstep(button) {
+      const substepItem = button.parentElement;
+      const subsubstepsContainer = substepItem.querySelector(".subsubsteps-container");
+      const newSubsubstep = document.createElement("div");
+      newSubsubstep.className = "checklist-item subsubstep-item";
+      newSubsubstep.innerHTML = `
+        <input type="checkbox">
+        <input type="text" placeholder="${subsubstepPlaceholder}">
+        <button type="button" class="remove-btn" onclick="this.parentElement.remove()">✕</button>
+      `;
+      subsubstepsContainer.appendChild(newSubsubstep);
+    }
+
+    // Handle image upload for DONE (store base64 in hidden field)
+    function handleDoneImage(fileInput) {
+      if(fileInput.files && fileInput.files[0]){
+        const reader = new FileReader();
+        reader.onload = function(e){
+          document.getElementById("done-image-data").value = e.target.result;
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      }
+    }
+
+    // Continue to Action Phase: Save planning data and go to action.html
+    function continueToActionPhase() {
+      // Save the innerHTML of the planning container into localStorage
+      const planningHTML = document.getElementById("planningContainer") ?
+                           document.getElementById("planningContainer").innerHTML :
+                           document.querySelector(".container").innerHTML;
+      localStorage.setItem("plannerData", planningHTML);
+      // Also save the task value (in case needed)
+      localStorage.setItem("plannerTask", document.getElementById("task-input").value);
+      // Redirect to action page
+      window.location.href = "action.html";
+    }
+  </script>
+</body>
+</html>

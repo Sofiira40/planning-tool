@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Action Phase – Get Ready-Do-Done Planner</title>
+  <!-- Include jsPDF and html2canvas libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    /* Base styling */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      color: #333;
+    }
+    /* Single row of pastel tabs */
+    .phases {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .phase {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 0 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .phase.planning { background-color: #d1ecf1; }
+    .phase.action { background-color: #d4edda; }
+    .phase.active {
+      outline: 2px solid #007bff;
+      outline-offset: -2px;
+    }
+    /* Progress tracker */
+    .progress-tracker {
+      margin: 20px 0;
+      background-color: #f1f1f1;
+      border-radius: 5px;
+      padding: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      background-color: #e0e0e0;
+      border-radius: 5px;
+      height: 25px;
+      position: relative;
+    }
+    .progress {
+      background-color: #4CAF50;
+      height: 100%;
+      border-radius: 5px;
+      width: 0%;
+      transition: width 0.5s;
+    }
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: black;
+      font-weight: bold;
+    }
+    /* Timer */
+    .timer-container {
+      margin: 10px 0 15px 0;
+      padding: 10px 15px;
+      background-color: #f0f0f0;
+      border-radius: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .timer {
+      font-size: 24px;
+      font-weight: bold;
+      font-family: monospace;
+      background-color: #333;
+      color: #4CAF50;
+      padding: 5px 10px;
+      border-radius: 4px;
+    }
+    .timer-controls {
+      margin-top: 10px;
+      display: flex;
+      gap: 5px;
+    }
+    .timer-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+    }
+    .start-btn { background-color: #4CAF50; color: white; }
+    .pause-btn { background-color: #ff9800; color: white; }
+    .reset-btn { background-color: #f44336; color: white; }
+    /* Table */
+    .grdd-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      table-layout: fixed;
+    }
+    .grdd-table th, .grdd-table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      vertical-align: top;
+      overflow-y: auto;
+      max-height: 500px;
+    }
+    @media (max-width: 768px) {
+      .grdd-table, .grdd-table tbody, .grdd-table tr, .grdd-table td, .grdd-table th {
+        display: block;
+        width: 100%;
+      }
+      .grdd-table td, .grdd-table th {
+        margin-bottom: 10px;
+      }
+    }
+    @media (min-width: 769px) {
+      .get-ready, .do, .done {
+        width: 33.33%;
+      }
+    }
+    .get-ready { background-color: #ffff99; }
+    .do { background-color: #90ee90; }
+    .done { background-color: #ff6961; }
+    input[type="text"], textarea {
+      padding: 8px;
+      margin-bottom: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 100%;
+    }
+    .checklist-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .checklist-item input[type="text"],
+    .subsubstep-item input[type="text"] {
+      flex: 1;
+    }
+    .add-btn, .export-btn, .nav-btn, .start-task-btn, .remove-btn, .add-substep-btn {
+      cursor: pointer;
+    }
+    .add-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .remove-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 2px 5px;
+      border-radius: 4px;
+      margin-left: 5px;
+    }
+    .phase-navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    .nav-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+    }
+    .current-task-header {
+      font-weight: bold;
+      font-size: 1.4em;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    /* "Chunk this further" for substeps */
+    ::-webkit-input-placeholder { font-size: 11px; color: #666; }
+    ::-moz-placeholder { font-size: 11px; color: #666; }
+    :-ms-input-placeholder { font-size: 11px; color: #666; }
+    :-moz-placeholder { font-size: 11px; color: #666; }
+    /* Export button */
+    .export-btn {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="actionContainer">
+    <!-- Phase Tab Bar -->
+    <div class="phases">
+      <div class="phase planning" id="PlanningPhaseTab" onclick="window.location.href='planning.html'">Planning Phase (Backwards Design)</div>
+      <div class="phase action active" id="ActionPhaseTab" onclick="">Action Phase (Forward Execution)</div>
+    </div>
+
+    <!-- Action Phase Content -->
+    <div class="tabcontent" id="ActionTab" style="display: block;">
+      <div class="current-task-header">
+        Current Task:
+        <span id="current-task-name">None selected</span>
+      </div>
+
+      <div class="progress-tracker">
+        <h3>Progress Tracker</h3>
+        <div class="progress-bar">
+          <div class="progress" id="progress-bar"></div>
+          <div class="progress-text" id="progress-text">0%</div>
+        </div>
+      </div>
+
+      <div class="timer-container">
+        <div class="timer" id="timer-display">
+          <span id="minutes">00</span>:<span id="seconds">00</span>
+        </div>
+        <div class="analog-timer">
+          <div class="analog-timer-fill" id="analog-timer-fill"></div>
+        </div>
+        <div class="timer-controls">
+          <button type="button" class="timer-btn start-btn" id="start-timer-btn" onclick="startTimer()">Start</button>
+          <button type="button" class="timer-btn pause-btn" id="pause-timer-btn" onclick="pauseTimer()" disabled>Pause</button>
+          <button type="button" class="timer-btn reset-btn" id="reset-timer-btn" onclick="resetTimer()" disabled>Reset</button>
+        </div>
+      </div>
+
+      <table class="grdd-table">
+        <tr>
+          <th class="get-ready">Get Ready</th>
+          <th class="do">Do</th>
+          <th class="done">Done</th>
+        </tr>
+        <tr>
+          <td class="get-ready" id="action-get-ready"></td>
+          <td class="do" id="action-do"></td>
+          <td class="done" id="action-done"></td>
+        </tr>
+      </table>
+
+      <div style="margin-top: 20px;">
+        <h4>Notes:</h4>
+        <textarea id="action-notes" placeholder="Enter any notes here..."></textarea>
+      </div>
+
+      <div class="phase-navigation">
+        <button type="button" class="nav-btn" onclick="window.location.href='planning.html'">← Back to Planning Phase</button>
+        <button type="button" class="export-btn" onclick="exportToPDF()">Export to PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------- Timer & Activation Functions ---------- */
+    let timerInterval = null;
+    let totalSeconds = 0;
+    let initialSeconds = 0;
+    let isTimerRunning = false;
+    let currentStepElement = null;
+    function startTimer() {
+      if (!isTimerRunning && totalSeconds > 0) {
+        isTimerRunning = true;
+        document.getElementById("start-timer-btn").disabled = true;
+        document.getElementById("pause-timer-btn").disabled = false;
+        document.getElementById("reset-timer-btn").disabled = false;
+        timerInterval = setInterval(updateTimer, 1000);
+      }
+    }
+    function pauseTimer() {
+      if (isTimerRunning) {
+        isTimerRunning = false;
+        document.getElementById("start-timer-btn").disabled = false;
+        document.getElementById("pause-timer-btn").disabled = true;
+        clearInterval(timerInterval);
+      }
+    }
+    function resetTimer() {
+      pauseTimer();
+      totalSeconds = initialSeconds;
+      updateTimerDisplay();
+      document.getElementById("reset-timer-btn").disabled = true;
+    }
+    function updateTimer() {
+      if (totalSeconds > 0) {
+        totalSeconds--;
+        updateTimerDisplay();
+      } else {
+        pauseTimer();
+        document.getElementById("timer-display").classList.add("time-estimate-exceeded");
+        alert("Time's up for the current task!");
+      }
+    }
+    function updateTimerDisplay() {
+      const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+      const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+      document.getElementById("minutes").textContent = minutes;
+      document.getElementById("seconds").textContent = seconds;
+      const timerDisplay = document.getElementById("timer-display");
+      timerDisplay.classList.remove("time-estimate-exceeded");
+      if (initialSeconds > 0) {
+        const percent = (totalSeconds / initialSeconds) * 100;
+        const analogFill = document.getElementById("analog-timer-fill");
+        analogFill.style.width = percent + "%";
+        let fillColor = "#4CAF50";
+        if (totalSeconds <= 60) { fillColor = "red"; }
+        else if (totalSeconds <= initialSeconds / 2) { fillColor = "yellow"; }
+        analogFill.style.backgroundColor = fillColor;
+      } else {
+        document.getElementById("analog-timer-fill").style.width = "0%";
+      }
+    }
+    function activateStepForItem(button) {
+      activateStep(button);
+    }
+    function activateStep(stepElement) {
+      const allSteps = document.querySelectorAll(".action-step-item, .action-substep-item, .action-subsubstep-item");
+      allSteps.forEach((step) => step.classList.remove("step-active"));
+      document.getElementById("timer-display").classList.remove("time-estimate-exceeded");
+      const stepItem = stepElement.closest(".action-step-item");
+      stepItem.classList.add("step-active");
+      const taskName = stepItem.querySelector(".step-info span").textContent;
+      document.getElementById("current-task-name").textContent = taskName;
+      pauseTimer();
+      const timeEstimate = parseInt(stepItem.dataset.timeEstimate);
+      if (timeEstimate && timeEstimate > 0) {
+        totalSeconds = timeEstimate * 60;
+        initialSeconds = totalSeconds;
+      } else {
+        totalSeconds = 0;
+        initialSeconds = 0;
+      }
+      updateTimerDisplay();
+      currentStepElement = stepItem;
+    }
+    function activateSubstep(substepElement) {
+      const allSteps = document.querySelectorAll(".action-step-item, .action-substep-item, .action-subsubstep-item");
+      allSteps.forEach((step) => step.classList.remove("step-active"));
+      document.getElementById("timer-display").classList.remove("time-estimate-exceeded");
+      const substepItem = substepElement.closest(".action-substep-item");
+      substepItem.classList.add("step-active");
+      const taskName = substepItem.querySelector("span").textContent;
+      document.getElementById("current-task-name").textContent = taskName;
+    }
+    function activateSubsubstep(substepElement) {
+      const allSteps = document.querySelectorAll(".action-step-item, .action-substep-item, .action-subsubstep-item");
+      allSteps.forEach((step) => step.classList.remove("step-active"));
+      document.getElementById("timer-display").classList.remove("time-estimate-exceeded");
+      const subsubstepItem = substepElement.closest(".action-subsubstep-item");
+      subsubstepItem.classList.add("step-active");
+      const taskName = subsubstepItem.querySelector("span").textContent;
+      document.getElementById("current-task-name").textContent = taskName;
+    }
+
+    /* ---------- 5) Completion Handlers ---------- */
+    function handleStepCompletion(checkbox) {
+      if (checkbox.checked) {
+        updateProgress();
+        const allSteps = document.querySelectorAll(
+          '#action-steps-list .action-step-item .step-info > input[type="checkbox"], #action-steps-list .action-substep-item .checklist-item > input[type="checkbox"], #action-steps-list .action-subsubstep-item .checklist-item > input[type="checkbox"]'
+        );
+        let currentIndex = -1;
+        let nextUncheckedElement = null;
+        for (let i = 0; i < allSteps.length; i++) {
+          if (allSteps[i] === checkbox) { currentIndex = i; break; }
+        }
+        if (currentIndex >= 0) {
+          for (let i = currentIndex + 1; i < allSteps.length; i++) {
+            if (!allSteps[i].checked) { nextUncheckedElement = allSteps[i]; break; }
+          }
+        }
+        if (nextUncheckedElement) {
+          const parentItem = nextUncheckedElement.closest(".checklist-item");
+          if (parentItem.parentElement.classList.contains("action-step-item")) { activateStep(parentItem); }
+          else if (parentItem.parentElement.classList.contains("action-substep-item")) { activateSubstep(parentItem); }
+          else if (parentItem.parentElement.classList.contains("action-subsubstep-item")) { activateSubsubstep(parentItem); }
+        } else { pauseTimer(); }
+      } else { updateProgress(); }
+    }
+    function handleSubstepCompletion(checkbox) {
+      updateProgress();
+      if (checkbox.checked) {
+        const parentSubstep = checkbox.closest(".action-substep-item");
+        const siblingSubsteps = parentSubstep.parentElement.querySelectorAll(".action-substep-item");
+        const allSubstepsChecked = Array.from(siblingSubsteps).every((substep) =>
+          substep.querySelector("input[type='checkbox']").checked
+        );
+        if (allSubstepsChecked) {
+          const parentStep = parentSubstep.closest(".action-step-item");
+          const parentStepCheckbox = parentStep.querySelector(".step-info > input[type='checkbox']");
+          if (!parentStepCheckbox.checked) {
+            parentStepCheckbox.checked = true;
+            handleStepCompletion(parentStepCheckbox);
+          }
+        }
+      }
+    }
+    function handleSubsubstepCompletion(checkbox) {
+      updateProgress();
+      if (checkbox.checked) {
+        const parentSubsubstep = checkbox.closest(".action-subsubstep-item");
+        const parentSubstep = parentSubsubstep.closest(".action-substep-item");
+        const siblingSubsubsteps = parentSubstep.querySelectorAll(".action-subsubstep-item");
+        const allSubsubstepsChecked = Array.from(siblingSubsubsteps).every(
+          (subsubstep) => subsubstep.querySelector("input[type='checkbox']").checked
+        );
+        if (allSubsubstepsChecked) {
+          const substepCheckbox = parentSubstep.querySelector("> .checklist-item > input[type='checkbox']");
+          if (!substepCheckbox.checked) {
+            substepCheckbox.checked = true;
+            handleSubstepCompletion(substepCheckbox);
+          }
+        }
+      }
+    }
+
+    /* ---------- 6) Progress & PDF Export ---------- */
+    function checkAllTasksCompleted() {
+      const allTasks = document.querySelectorAll("#action-do input[type='checkbox']");
+      const allCompleted = Array.from(allTasks).every((checkbox) => checkbox.checked);
+      if (allCompleted) {
+        pauseTimer();
+        alert("Congratulations! All tasks have been completed.");
+      }
+    }
+    function updateProgress() {
+      const allCheckboxes = document.querySelectorAll("#ActionTab input[type='checkbox']");
+      const checkedCheckboxes = document.querySelectorAll("#ActionTab input[type='checkbox']:checked");
+      if (allCheckboxes.length > 0) {
+        const progressPercentage = Math.round((checkedCheckboxes.length / allCheckboxes.length) * 100);
+        document.getElementById("progress-bar").style.width = progressPercentage + "%";
+        document.getElementById("progress-text").textContent = progressPercentage + "%";
+        checkAllTasksCompleted();
+      } else {
+        document.getElementById("progress-bar").style.width = "0%";
+        document.getElementById("progress-text").textContent = "0%";
+      }
+    }
+    function exportToPDF() {
+      html2canvas(document.querySelector(".container"), { scale: 0.5 }).then(canvas => {
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "pt", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        pdf.save("plan.pdf");
+      }).catch(err => {
+        alert("PDF export failed: " + err);
+      });
+    }
+
+    // On load, you can load data from localStorage if needed (if planning.html saved data)
+    (function init(){
+      // (Optional) If you want to auto-populate fields from localStorage, implement here.
+      // For now, we assume action.html builds the UI from the planning data saved.
+      populateActionPhase();
+    })();
+  </script>
+</body>
+</html>
